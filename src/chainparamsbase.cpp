@@ -13,11 +13,13 @@
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::MYNET = "mynet";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-mynet", _("Use the mynet chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
@@ -65,6 +67,20 @@ public:
 };
 static CBaseRegTestParams regTestParams;
 
+/*
+ * myNet
+ */
+class CBaseMyNetParams : public CBaseChainParams
+{
+public:
+    CBaseMyNetParams()
+    {
+        nRPCPort = 18998;
+        strDataDir = "mynet";
+    }
+};
+static CBaseMyNetParams myNetParams;
+
 static CBaseChainParams* pCurrentBaseParams = 0;
 
 const CBaseChainParams& BaseParams()
@@ -81,6 +97,8 @@ CBaseChainParams& BaseParams(const std::string& chain)
         return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
+    else if (chain == CBaseChainParams::MYNET)
+        return myNetParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
@@ -94,13 +112,16 @@ std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
+    bool fMyNet = GetBoolArg("-mynet", false);
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (fTestNet + fRegTest + fMyNet > 1)
+        throw std::runtime_error("Invalid combination of -regtest, -testnet and -mynet. Only one could appear.");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
+    if (fMyNet)
+        return CBaseChainParams::MYNET;
     return CBaseChainParams::MAIN;
 }
 
