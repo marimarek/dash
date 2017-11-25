@@ -19,6 +19,9 @@
 
 #include <arith_uint256.h>
 
+#include "script/standard.h"
+#include "base58.h"
+
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -61,10 +64,10 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 static CBlock CreateGenesisBlockMyNet(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "Wired 22/Nov/2017 New net of dash";
-    //change pubKey
-    const CScript genesisOutputScript = CScript() << ParseHex("110184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
+    const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;// = GetScriptForDestination(address.Get());
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
+
 
 /**
  * Main network
@@ -450,11 +453,11 @@ public:
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
-        consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256S("0x00000d8372184bdb92042a9b15b845d8e3c3029f7d21ff260b9461e601844746"); //start from genesis
-        consensus.powLimit = uint256S("00000fffff000000000000000000000000000000000000000000000000000000");
-        consensus.nPowTargetTimespan = 60*60; // Dash: 1 day  -> change to one hour
-        consensus.nPowTargetSpacing = 60; // Dash: 2.5 minutes -> change to 1 minute
+        consensus.BIP34Height = -1;
+        consensus.BIP34Hash = uint256(); //start from genesis
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 10*6*10; // Dash: 1 day  -> change to 10 minutes
+        consensus.nPowTargetSpacing = 10; // Dash: 2.5 minutes -> change to 10 seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 45; // 75% of 60
@@ -498,7 +501,8 @@ public:
 
 
 
-        genesis = CreateGenesisBlockMyNet(1511363160, 0, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlockMyNet(1511363160, 0, 0x207fffff, 1, 50 * COIN);
+
 
         //adjust nonce and nBits
         arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
@@ -518,8 +522,8 @@ public:
         std::cout<<"Hash merkle root: "<< genesis.hashMerkleRoot.GetHex() <<std::endl;
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000d8372184bdb92042a9b15b845d8e3c3029f7d21ff260b9461e601844746"));
-        assert(genesis.hashMerkleRoot == uint256S("0x069908f2ab863b3080ec85f3d3b545458039aa1a892d1388e3ca2fcc6fb51a2b"));
+        assert(consensus.hashGenesisBlock == uint256S("0x51b6529b1a491684ca68da6375ac5531f49d0c79ce2c1404c34b4afb055c32dc"));
+        assert(genesis.hashMerkleRoot == uint256S("0xce456a5f92c488848f565fae2d132e3be9cfa806bc46054894642fd438a9be45"));
 
         vFixedSeeds.clear(); //! Reset fixed seeds.
         vSeeds.clear();  //! No DNS seeds.
@@ -541,7 +545,7 @@ public:
         // Dash BIP44 coin type is '5'
         nExtCoinType = 5;
 
-        fMiningRequiresPeers = true;
+        fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
@@ -553,17 +557,18 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            (  0, uint256S("0x00000d8372184bdb92042a9b15b845d8e3c3029f7d21ff260b9461e601844746")),
-            1511363160, // * UNIX timestamp of last checkpoint block
+            (  0, uint256S("0x51b6529b1a491684ca68da6375ac5531f49d0c79ce2c1404c34b4afb055c32dc")),
+            0, // * UNIX timestamp of last checkpoint block
             0,    // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            10        // * estimated number of transactions per day after checkpoint
+            0        // * estimated number of transactions per day after checkpoint
         };
     }
 };
 static CMyNetParams myNetParams;
 
 static CChainParams *pCurrentParams = 0;
+
 
 const CChainParams &Params() {
     assert(pCurrentParams);
