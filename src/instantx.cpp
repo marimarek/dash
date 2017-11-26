@@ -182,6 +182,8 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 
     LOCK2(cs_main, cs_instantsend);
 
+    std::cout<<"We're vouting!"<<std::endl;
+
     uint256 txHash = txLockCandidate.GetHash();
     // check if we need to vote on this candidate's outpoints,
     // it's possible that we need to vote for several of them
